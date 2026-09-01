@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>XMB · Личная PSP-страница</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/manrope@5/index.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="boot">
+  <div class="bootCore">
+    <div class="bootRing"></div>
+    <div>
+      <div class="bootName" id="bootName">XMB HOME</div>
+      <div class="bootSub" style="text-align:center;margin-top:8px">загрузка оболочки…</div>
+    </div>
+  </div>
+</div>
+
+<main id="stage">
+  <canvas id="waveCanvas"></canvas>
+  <img id="wpA" alt=""><img id="wpB" alt="">
+  <div id="tintLayer"></div>
+  <div id="vignette"></div>
+  <div id="statusBar" onclick="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+    <div id="siteLabel">XMB HOME</div>
+    <div class="sbRight">
+      <button id="fsBtn" class="fsBtn" title="Полноэкранный режим"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+      <span id="clockText">—</span>
+      <span class="battery" style="line-height:0;vertical-align:middle"><svg viewBox="0 0 34 16"><rect x="1" y="2" width="28" height="12" rx="3" fill="none" stroke="rgba(245,248,255,.9)" stroke-width="1.6"/><rect x="30.5" y="5.5" width="3" height="5" rx="1.2" fill="rgba(245,248,255,.9)"/><rect x="4" y="5" width="16" height="6" rx="1.6" fill="rgba(245,248,255,.92)"/></svg></span>
+    </div>
+  </div>
+  <div id="crumb"></div>
+  <div id="catLayer"></div>
+  <div id="itemLayer"></div>
+  <div id="catLabel"></div>
+  <div id="itemLabel"></div>
+  <div id="emptyHint">Раздел пуст — добавьте пункты через админ-панель</div>
+  <div id="textPanel">
+    <div class="tpScroll">
+      <h2 id="tpTitle"></h2>
+      <div class="tpSub" id="tpSub"></div>
+      <div class="tpBody" id="tpBody"></div>
+    </div>
+    <button class="tpClose" id="tpClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div id="hintBar">
+    <span><kbd>←</kbd><kbd>→</kbd>разделы</span>
+    <span><kbd>↑</kbd><kbd>↓</kbd>пункты</span>
+    <span><kbd>Enter</kbd>открыть</span>
+    <span><kbd>Esc</kbd>назад</span>
+  </div>
+</main>
+
+<!-- МУЗЫКА -->
+<div class="overlay mediaOv" id="musicOv">
+  <canvas id="mWave"></canvas>
+  <div class="mTop"><span id="mTopTitle">♫ —</span><span class="cnt" id="mCount">(0/0)</span><button class="pBtn" id="mClose" title="Закрыть"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="mHead">
+    <div class="mArt" id="mArt"></div>
+    <div class="mHeadInfo"><div id="mTitle">—</div><div id="mSub">—</div></div>
+    <span class="fmtBadge" id="mFormat">AUDIO</span>
+  </div>
+  <div class="mBottom">
+    <div class="mRow">
+      <button class="triBtn" id="mPrev" title="Предыдущий трек"><svg viewBox="0 0 24 24"><path d="M19 20L9 12l10-8z" fill="#fff"/><path d="M5 19V5" stroke="#fff" stroke-width="2"/></svg></button>
+      <button class="triBtn" id="mPlay" title="Играть / пауза"><svg viewBox="0 0 24 24"><path id="mPlayPath" d="M6 4l14 8-14 8z" fill="#fff"/></svg></button>
+      <button class="triBtn" id="mNext" title="Следующий трек"><svg viewBox="0 0 24 24"><path d="M5 4l10 8-10 8z" fill="#fff"/><path d="M19 5v14" stroke="#fff" stroke-width="2"/></svg></button>
+      <div class="mProg" id="mProg"><i id="mBar"></i></div>
+      <span class="mTime"><b id="mCur">00:00</b> / <span id="mDur">00:00</span></span>
+      <div class="mVolWrap">
+        <button class="triBtn" id="mVolBtn" title="Громкость"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+        <div class="mVolPop"><input type="range" id="mVol" min="0" max="1" step="0.01" value="1"></div>
+      </div>
+    </div>
+    <div class="mVizRow" id="mVizRow"></div>
+  </div>
+</div>
+
+<!-- ФОТО -->
+<div class="overlay mediaOv" id="photoOv">
+  <div class="mTop"><span id="pTopTitle">—</span><span class="cnt" id="pCount">(1/1)</span><button class="pBtn" id="pClose" title="Закрыть"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div id="pStage"><img id="pImg" alt="" draggable="false"></div>
+  <div class="pBar">
+    <button class="pBtn" id="pPrev" title="Предыдущее фото"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <button class="pBtn" id="pNext" title="Следующее фото"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+    <span class="pSep"></span>
+    <button class="pBtn" id="pZoomOut" title="Уменьшить"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M8 11h6"/></svg></button>
+    <button class="pBtn" id="pZoomIn" title="Увеличить"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M8 11h6M11 8v6"/></svg></button>
+    <button class="pBtn" id="pRot" title="Повернуть на 90°"><svg viewBox="0 0 24 24"><path d="M21 4v6h-6"/><path d="M21 10a8 8 0 1 0-2.3 5.7"/></svg></button>
+  </div>
+</div>
+
+<!-- ВИДЕО -->
+<div class="overlay mediaOv" id="videoOv">
+  <video id="videoEl" playsinline></video>
+  <div class="mTop vTop" id="vTop"><span id="vTopTitle">—</span><span class="cnt" id="vCount"></span><button class="pBtn" id="vCloseTop" title="Закрыть"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="vBar" id="vBar">
+    <button class="pBtn" id="vPrev" title="Предыдущее видео"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <button class="triBtn" id="vPlay" title="Играть / пауза"><svg viewBox="0 0 24 24"><path id="vPlayPath" d="M6 4l14 8-14 8z" fill="#fff"/></svg></button>
+    <button class="pBtn" id="vNext" title="Следующее видео"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+    <div class="mProg" id="vProg" style="flex:1"><i id="vBarFill"></i></div>
+    <span class="mTime"><b id="vCur">00:00</b> / <span id="vDur">00:00</span></span>
+    <div class="mVolWrap">
+      <button class="triBtn" id="vVolBtn" title="Громкость"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+      <div class="mVolPop"><input type="range" id="vVol" min="0" max="1" step="0.01" value="1"></div>
+    </div>
+  </div>
+</div>
+
+<div id="miniPlayer">
+  <div class="miniBg" id="miniBg"></div>
+  <div class="miniArt" id="miniArt"></div>
+  <div class="miniArtClose" id="miniArtClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+  <div class="miniMeta"><div class="miniTitle" id="miniTitle">—</div><div class="miniSub" id="miniSub">—</div></div>
+  <div class="miniCtls">
+    <button class="miniCtl" id="miniPrev" title="Предыдущий"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
+    <button class="miniCtl play" id="miniPlay"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg></button>
+    <button class="miniCtl" id="miniNext" title="Следующий"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
+  </div>
+  <div class="miniVolWrap">
+    <button class="miniCtl" id="miniVolBtn" title="Громкость"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+    <div class="miniVolPop"><input type="range" id="miniVol" min="0" max="1" step="0.01" value="1"></div>
+  </div>
+  <button class="miniOpenBtn" id="miniOpen" title="Открыть плеер"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
+</div>
+
+<!-- PROMPT -->
+<div id="fsPrompt">
+  <span>Включить полноэкранный режим?</span>
+  <div class="fsPromptBtns">
+    <button class="fsYes" id="fsYes">Да</button>
+    <button id="fsNo">Нет</button>
+  </div>
+</div>
+
+<div id="toastHost"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
