@@ -913,7 +913,7 @@ function activateItem(item){
 
 /* ================= МУЗЫКА ================= */
 const audio=new Audio();
-let playlist=[],plIndex=0;
+let playlist=[],plIndex=0,mUrl=null;
 let audioCtx=null,analyser=null,freqData=null;
 let mVizMode=0,mRaf=0;
 function ensureAnalyser(){
@@ -1029,7 +1029,11 @@ async function playTrack(i){
   if(ic&&ic.src){bg.style.backgroundImage='url('+ic.src+')';bg.classList.add('on');}
   else bg.classList.remove('on');
   if(!item.fileId){toast('Файл не найден','Загрузите аудио в админ-панели.','err');return;}
-  audio.src=fileUrl(item.fileId);
+  if(mUrl){URL.revokeObjectURL(mUrl);mUrl=null;}
+  const url = await fetchWithProgress(fileUrl(item.fileId), item.title);
+  if(!url) return;
+  mUrl=url;
+  audio.src=mUrl;
   ensureAnalyser();
   if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
   try{await audio.play();}catch(e){}
@@ -1071,7 +1075,11 @@ $('#miniPlay').addEventListener('click',()=>{if(audio.paused)audio.play();else a
 $('#miniPrev').addEventListener('click',()=>playTrack(plIndex-1));
 $('#miniNext').addEventListener('click',()=>playTrack(plIndex+1));
 $('#miniOpen').addEventListener('click',()=>{$('#miniPlayer').classList.remove('on');openOverlay('musicOv');startMusicViz();});
-$('#miniArtClose').addEventListener('click',()=>{audio.pause();audio.src='';stopMusicViz();$('#miniPlayer').classList.remove('on');$('#miniBg').classList.remove('on');});
+$('#miniArtClose').addEventListener('click',()=>{
+  audio.pause();audio.src='';
+  if(mUrl){URL.revokeObjectURL(mUrl);mUrl=null;}
+  stopMusicViz();$('#miniPlayer').classList.remove('on');$('#miniBg').classList.remove('on');
+});
 $('#miniVol').addEventListener('input',e=>{audio.volume=parseFloat(e.target.value);});
 
 /* ================= ФОТО (PSP-просмотр) ================= */
@@ -1098,7 +1106,9 @@ async function showPhoto(){
   const img=$('#pImg');
   img.style.opacity='0';
   photoRot=0;photoZoom=1;photoPanX=0;photoPanY=0;
-  const url=fileUrl(item.fileId);
+  if(pUrl){URL.revokeObjectURL(pUrl);pUrl=null;}
+  const url=await fetchWithProgress(fileUrl(item.fileId), item.title);
+  if(!url) return;
   img.onload=()=>{img.style.opacity='1';pUrl=url;layoutPhoto();};
   img.src=url;
   applyPhotoTransform();
@@ -1174,7 +1184,10 @@ async function loadVideo(){
   $('#vTopTitle').textContent=item.title;
   $('#vCount').textContent='('+(videoIdx+1)+'/'+videoList.length+')';
   if(!item.fileId){toast('Файл не найден','Загрузите видео в админ-панели.','err');return;}
-  vUrl=fileUrl(item.fileId);
+  if(vUrl){URL.revokeObjectURL(vUrl);vUrl=null;}
+  const url = await fetchWithProgress(fileUrl(item.fileId), item.title);
+  if(!url) return;
+  vUrl=url;
   videoEl.src=vUrl;
   vPoke();
   try{await videoEl.play();}catch(e){}
@@ -1186,7 +1199,11 @@ function openVideo(item){
   openOverlay('videoOv');
   loadVideo();
 }
-function closeVideo(){videoEl.pause();videoEl.removeAttribute('src');videoEl.load();vUrl=null;closeOverlay('videoOv');}
+function closeVideo(){
+  videoEl.pause();videoEl.removeAttribute('src');videoEl.load();
+  if(vUrl){URL.revokeObjectURL(vUrl);vUrl=null;}
+  closeOverlay('videoOv');
+}
 function vToggle(){videoEl.paused?videoEl.play():videoEl.pause();vPoke();}
 videoEl.addEventListener('click',vToggle);
 $('#vPlay').addEventListener('click',vToggle);
@@ -1387,6 +1404,75 @@ if(!localStorage.getItem('fsPrompted')){
       setTimeout(()=>$('#fsPrompt').classList.add('show'),500);
     }
   });
+}
+
+/* ================= ПРОГРЕСС ЗАГРУЗКИ ================= */
+let dlController = null;
+function showDl(title) {
+  let el = $('#dlProgress');
+  if (!el) {
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="dlProgress" class="overlay">
+        <div class="dlCard" style="background:rgba(10,14,28,.95);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:30px;width:300px;max-width:90vw;display:flex;flex-direction:column;align-items:center;box-shadow:0 10px 40px rgba(0,0,0,.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
+          <div class="bootRing"></div>
+          <div id="dlTitle" style="font-weight:700;margin:16px 0 12px;color:#fff;font-family:var(--fTitle);text-align:center;">Загрузка...</div>
+          <div style="width:100%;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;position:relative;">
+            <div id="dlBar" style="height:100%;width:0%;background:var(--accent);transition:width .1s linear;"></div>
+          </div>
+          <div id="dlText" style="margin-top:10px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;">Подключение...</div>
+          <button id="dlCancel" class="btn" style="margin-top:16px;font-size:11px;padding:6px 12px">Отмена</button>
+        </div>
+      </div>
+    `);
+    el = $('#dlProgress');
+    $('#dlCancel').addEventListener('click', () => {
+      if (dlController) dlController.abort();
+      hideDl();
+    });
+  }
+  $('#dlTitle').textContent = title;
+  $('#dlBar').style.width = '0%';
+  $('#dlText').textContent = 'Подключение...';
+  el.classList.add('open');
+}
+function hideDl() {
+  const el = $('#dlProgress');
+  if (el) el.classList.remove('open');
+  dlController = null;
+}
+async function fetchWithProgress(url, label) {
+  if (dlController) dlController.abort();
+  dlController = new AbortController();
+  showDl(label);
+  try {
+    const res = await fetch(url, { signal: dlController.signal });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const total = parseInt(res.headers.get('content-length'), 10) || 0;
+    const reader = res.body.getReader();
+    const chunks = [];
+    let received = 0;
+    while(true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.length;
+      if (total) {
+        const pct = (received / total * 100).toFixed(1);
+        $('#dlBar').style.width = pct + '%';
+        $('#dlText').textContent = `${fmtBytes(received)} / ${fmtBytes(total)} (${pct}%)`;
+      } else {
+        $('#dlBar').style.width = '100%';
+        $('#dlText').textContent = `${fmtBytes(received)} загружено`;
+      }
+    }
+    hideDl();
+    const blob = new Blob(chunks, { type: res.headers.get('content-type') });
+    return URL.createObjectURL(blob);
+  } catch(e) {
+    hideDl();
+    if (e.name !== 'AbortError') toast('Ошибка', 'Не удалось загрузить файл', 'err');
+    return null;
+  }
 }
 
 /* ================= ЭКСПОРТ ДЛЯ ADMIN.JS ================= */
