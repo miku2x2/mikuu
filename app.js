@@ -372,8 +372,8 @@ const PSP={catX:110,catY:72,catSp:82,catW:64,catH:48,catLblY:98,catFont:11,itemX
 function computeU(){
   const isPortrait = innerHeight > innerWidth;
   if (isPortrait) {
-    U = innerWidth / 360;
-    OX = 0;
+    U = innerWidth / 200;
+    OX = (innerWidth * 0.20) - (110 * U);
     OY = (innerHeight - 272 * U) / 2;
   } else {
     U = Math.min(innerWidth/480, innerHeight/272);
