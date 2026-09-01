@@ -370,11 +370,16 @@ let U=2,OX=0,OY=0;
 const PSP={catX:110,catY:72,catSp:82,catW:64,catH:48,catLblY:98,catFont:11,itemX:110,itemY:137,itemSp:64,body:48,focus:64,lblX:149,itemFont:14,subFont:11,sub2X:130,sub2Body:32,sub2Focus:48};
 
 function computeU(){
-  const isPortrait=innerHeight>innerWidth;
-  const targetW=isPortrait?280:480;
-  U=Math.min(innerWidth/targetW,innerHeight/272);
-  OX=(innerWidth-480*U)/2;
-  OY=(innerHeight-272*U)/2;
+  const isPortrait = innerHeight > innerWidth;
+  if (isPortrait) {
+    U = innerWidth / 360;
+    OX = 0;
+    OY = (innerHeight - 272 * U) / 2;
+  } else {
+    U = Math.min(innerWidth/480, innerHeight/272);
+    OX = (innerWidth - 480 * U) / 2;
+    OY = (innerHeight - 272 * U) / 2;
+  }
 }
 addEventListener('resize',()=>{
   computeU();renderXmb();
