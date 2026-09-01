@@ -324,7 +324,7 @@ const MONTH_COLORS={
 };
 function defaultConfig(){
   return {
-    siteName:'XMB HOME',showHints:true,randomThemes:false,activeThemeId:null,themes:[],
+    siteName:'miku2x2.onrender.com',showHints:true,randomThemes:false,activeThemeId:null,themes:[],
     iconScale:1,
     fonts:{list:[],roles:{cat:'',title:'',sub:''}},
     sections:[
@@ -1390,7 +1390,7 @@ if(!localStorage.getItem('fsPrompted')){
 }
 
 /* ================= ЭКСПОРТ ДЛЯ ADMIN.JS ================= */
-function applySiteName(){const n=(config.siteName||'XMB HOME').trim()||'XMB HOME';$('#siteLabel').textContent=n;$('#bootName').textContent=n;document.title=n+' · PSP-страница';}
+function applySiteName(){const n=(config.siteName||'miku2x2.onrender.com').trim()||'XMB HOME';$('#siteLabel').textContent=n;$('#bootName').textContent=n;document.title=n+' · PSP-страница';}
 function applyHints(){$('#hintBar').style.display=config.showHints?'':'none';}
 window.XMB={
   $, $$, uid, clamp, get config(){return config;}, set config(v){config=v;}, saveConfig,
